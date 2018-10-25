@@ -1,0 +1,23 @@
+---
+title: "H3K27ac_HGSOC_consensus_upsetr_analysis"
+author: "Alberto Luiz Pascasio Reyes"
+date: "10/25/2018"
+output: html_document
+---
+
+load libraries and files
+```{r}
+
+library(GenomicRanges)
+library(HelloRanges)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(UpSetR)
+library(rtracklayer)
+library(optparse)
+
+
+```
