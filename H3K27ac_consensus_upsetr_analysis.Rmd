@@ -9,7 +9,10 @@ load libraries and input files
 ```{r}
 
 library(GenomicRanges)
+library(GenomicFeatures)
 library(HelloRanges)
+library(IRanges)
+library(S4Vectors)
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -24,8 +27,102 @@ hgsoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/HGSOC/allpeaks.ann
 
 ```
 
+form peak subsets (unique and consensus)
+```{r}
 
-do analysis upsetr analysis
+### make union of all unique peaks
+union_unique_hgsoc_k27ac_hg19 <- hgsoc_k27ac_hg19[which(rowSums(hgsoc_k27ac_hg19[,4:7]) < 1.5),-8] ##### NOT merged
+
+### pull out cell line specific unique peaks to make data frames
+hey_unique_hgsoc_k27ac_hg19 <- filter(union_unique_hgsoc_k27ac_hg19, B08_Hey_H3K27Ac_hg37 == 1)
+uwb_unique_hgsoc_k27ac_hg19 <- filter(union_unique_hgsoc_k27ac_hg19, B09_UWB1.289 == 1)
+caov3_unique_hgsoc_k27ac_hg19 <- filter(union_unique_hgsoc_k27ac_hg19, B10_CaOV3 == 1)
+kur_unique_hgsoc_k27ac_hg19 <- filter(union_unique_hgsoc_k27ac_hg19, B11_Kuramochi_H3K27Ac_hg37 == 1) ##### *** CONFIRM "NEW PEAKS" ARE 2017 PANEL LIFTED OVER FROM HG38 TO HG19 --> ALL BIOFEATURE FILES STILL HG19??? ***
+
+### convert into granges and ignore metadata cosl (bc that information will be in name of peak set)
+gr_hey_unique_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(hey_unique_hgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_uwb_unique_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(uwb_unique_hgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_caov3_unique_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(caov3_unique_hgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_kur_unique_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(kur_unique_hgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+# gr_hey_unique_hgsoc_k27ac_hg19 <- GRanges(seqnames = hey_unique_hgsoc_k27ac_hg19$chr,
+#                                           ranges = IRanges(start = hey_unique_hgsoc_k27ac_hg19$start, end = hey_unique_hgsoc_k27ac_hg19$end -1),
+#                                           data = NULL)
+
+
+# ### merge individual GR obj's
+# gr_hey_unique_hgsoc_k27ac_hg19
+# bedtools_merge("-i hey.bed")
+# gr_hey_unique_hgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_hey_unique_hgsoc_k27ac_hg19, ignore.strand = TRUE, with.revmap = TRUE)
+# gr_hey_unique_hgsoc_k27ac_hg19 ####### --> do NOT need to do merge step for unique (duh)???
+# 
+# gr_uwb_unique_hgsoc_k27ac_hg19
+# gr_uwb_unique_hgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_uwb_unique_hgsoc_k27ac_hg19, ignore.strand = TRUE)
+# gr_uwb_unique_hgsoc_k27ac_hg19 ####### --> do NOT need to do merge step for unique (duh)???
+
+
+
+### make consensus peak set df
+consensus_hgsoc_k27ac_hg19 <- hgsoc_k27ac_hg19[which(rowSums(hgsoc_k27ac_hg19[,4:7]) >= 1.5), -8] ##### NOT merged
+
+### convert into granges and ignore metadata cols
+gr_consensus_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_hgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+
+### merge consensus GR obj (don't double count regions/"peaks")
+gr_consensus_hgsoc_k27ac_hg19 ### 136361 peaks
+gr_consensus_hgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_hgsoc_k27ac_hg19, ignore.strand = FALSE)
+gr_consensus_hgsoc_k27ac_hg19 ### 39014 peaks --> douesn't double count overlapping regions
+
+```
+
+write above peak subsets to files
+```{r}
+
+### write consensus
+View(as.data.frame(gr_consensus_hgsoc_k27ac_hg19))
+write.table(as.data.frame(gr_consensus_hgsoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/HGSOC/hgsoc_k27ac_hg19_consensus.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+### write hey unique
+write.table(as.data.frame(gr_hey_unique_hgsoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/HGSOC/unique_hey_hgsoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+### write uwb unique
+write.table(as.data.frame(gr_uwb_unique_hgsoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/HGSOC/unique_uwb_hgsoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+### write caov3 unique
+write.table(as.data.frame(gr_caov3_unique_hgsoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/HGSOC/unique_caov3_hgsoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+### write kuramochi unique
+write.table(as.data.frame(gr_kur_unique_hgsoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/HGSOC/unique_kur_hgsoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+
+
+```
+
+do consensus/intersection/upsetr analysis
 ```{r}
 
 # option_list <- list(
@@ -49,19 +146,23 @@ do analysis upsetr analysis
 #   stop("File ", opt$file, "does not exist")
 # } ### not working yet
 
-x <- hgsoc_k27ac_hg19[,-8]
+x <- hgsoc_k27ac_hg19[,-8] ###change this obj name to whatever file being analyzed
+View(x)
+
 y <- x; y[, c(4:ncol(x))] <- x[, c(4:ncol(x))] > 0.5
+View(y)
 
 y <- GRanges(seqnames = y$chr,
              ranges = IRanges(start = y$start, end = y$end - 1),
              data = y[, 4:ncol(y)])
+y
 
 yr <- GenomicRanges::reduce(y, with.revmap = TRUE)
 
 sample_overlap <- t(bind_cols(lapply(
   relist(mcols(y)[unlist(yr$revmap),], yr$revmap),
   function(x) {
-    tibble::as_tibble(colSums(as.matrix(x)) >= 1) ### set threshold of overlap (percentage) here
+    tibble::as_tibble(colSums(as.matrix(x)) >= 1) ### set threshold of overlap (percentage) here.....why is this mat bigger than x???...how to interp this chunk
   })))
 
 mcols(yr) <- sample_overlap
@@ -88,6 +189,8 @@ upset(as.data.frame(sample_overlap + 0), ### simon's method
 
 ```
 
+
+
 try cluster analysis
 ```{r}
 
@@ -95,8 +198,30 @@ pheatmap(as.matrix(x[1:1000,4:7])) ### clustering "works" but not meaningful w/ 
 
 ```
 
+"cluster" (using peak overlap/presence) using consensus set then unique sets?
+```{r}
+
+x <- hgsoc_k27ac_hg19[which(rowSums(hgsoc_k27ac_hg19[,4:7]) >= 1.5), -8] ##### NOT merged.....but can't if doing the following steps *** redefining x ***
+pheatmap(as.matrix(x[runif(1000, 1, 136361) ,4:7])) ###### NO MEANING doing hgsoc k27ac consensus by itself bc no compare to other groups --> try unique set
+
+x <- filter(union_unique_hgsoc_k27ac_hg19, B08_Hey_H3K27Ac_hg37 == 1)
+pheatmap(as.matrix(x[runif(1000, 1, 18990) ,4:7])) ### behaves as expected
+
+x <- hgsoc_k27ac_hg19[which(rowSums(hgsoc_k27ac_hg19[,4:7]) < 1.5),-8]
+pheatmap(as.matrix(x[runif(1000, 1, 106698) ,4:7]))
+
+##### need to do similar to all consensus w/ each other #####
+
+```
 
 
+
+make TSS file.....attempt
+```{r}
+
+t1 <- GenomicFeatures::makeTranscriptDbFromUCSC("hg38", "refGene") ##### getting error
+
+```
 
 
 

@@ -1,0 +1,8 @@
+---
+title: "H3K27ac_LGSOC_consensus_upsetr_analysis"
+author: "Alberto Luiz Pascasio Reyes"
+date: "11/1/2018"
+output: html_document
+---
+
+
