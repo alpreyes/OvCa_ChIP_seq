@@ -191,6 +191,23 @@ upset(as.data.frame(sample_overlap + 0), ### simon's method
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 try cluster analysis
 ```{r}
 
@@ -222,6 +239,5 @@ make TSS file.....attempt
 t1 <- GenomicFeatures::makeTranscriptDbFromUCSC("hg38", "refGene") ##### getting error
 
 ```
-
 
 
