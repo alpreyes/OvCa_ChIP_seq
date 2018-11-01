@@ -5,4 +5,70 @@ date: "11/1/2018"
 output: html_document
 ---
 
+load libraries and input files
+```{r}
+
+library(GenomicRanges)
+library(GenomicFeatures)
+library(HelloRanges)
+library(IRanges)
+library(S4Vectors)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(UpSetR)
+library(rtracklayer)
+library(optparse)
+library(pheatmap)
+
+lgsoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/LGSOC/allpeaks.anno.tsv") ### file made from simon's bash script
+lgsoc_k27ac_hg19 <- lgsoc_k27ac_hg19[,-6]
+```
+
+make consensus set
+```{r}
+
+consensus_lgsoc_k27ac_hg19 <- lgsoc_k27ac_hg19[which(rowSums(lgsoc_k27ac_hg19[,4:5]) >= 1.5),]
+
+gr_consensus_lgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_lgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+
+gr_consensus_lgsoc_k27ac_hg19
+gr_consensus_lgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_lgsoc_k27ac_hg19, ignore.strand = FALSE)
+gr_consensus_lgsoc_k27ac_hg19
+
+```
+
+make unique sets
+```{r}
+
+union_unique_lgsoc_k27ac_hg19 <- lgsoc_k27ac_hg19[which(rowSums(lgsoc_k27ac_hg19[,4:5]) < 1.5),]
+
+colnames(union_unique_lgsoc_k27ac_hg19)
+
+voa_unique_lgsoc_k27ac_hg19 <- filter(union_unique_lgsoc_k27ac_hg19, B06_VOA1056_H3K27Ac_hg37 == 1)
+oaw_unique_lgsoc_k27ac_hg19 <- filter(union_unique_lgsoc_k27ac_hg19, B07_OAW ==1)
+
+gr_voa_unique_lgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(voa_unique_lgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_voa_unique_lgsoc_k27ac_hg19
+
+gr_oaw_unique_lgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(oaw_unique_lgsoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_oaw_unique_lgsoc_k27ac_hg19
+
+```
+
+write peak subsets to files
+```{r}
+
+
+
+```
+
+
+
+
+
+
+
 
