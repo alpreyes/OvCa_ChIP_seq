@@ -25,6 +25,7 @@ library(pheatmap)
 
 lgsoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/LGSOC/allpeaks.anno.tsv") ### file made from simon's bash script
 lgsoc_k27ac_hg19 <- lgsoc_k27ac_hg19[,-6]
+
 ```
 
 make consensus set
@@ -52,7 +53,7 @@ oaw_unique_lgsoc_k27ac_hg19 <- filter(union_unique_lgsoc_k27ac_hg19, B07_OAW ==1
 
 gr_voa_unique_lgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(voa_unique_lgsoc_k27ac_hg19, keep.extra.columns = FALSE)
 gr_voa_unique_lgsoc_k27ac_hg19
-gr_voa_unique_lgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_voa_unique_lgsoc_k27ac_hg19, ignore.strand = TRUE, with.revmap=TRUE)
+gr_voa_unique_lgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_voa_unique_lgsoc_k27ac_hg19, ignore.strand = TRUE, with.revmap=TRUE) ### don''t need this step for unique peaks
 gr_voa_unique_lgsoc_k27ac_hg19
 
 gr_oaw_unique_lgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(oaw_unique_lgsoc_k27ac_hg19, keep.extra.columns = FALSE)
@@ -86,7 +87,7 @@ write.table(as.data.frame(gr_oaw_unique_lgsoc_k27ac_hg19),
 
 ```
 
-do (simon's newest method for) upsetr analysis
+do (simon's newest method for) upsetr analysis (can run this part by itself independent of other chunks)
 ```{r}
 
 lgsoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/LGSOC/allpeaks.anno.tsv") ### file made from simon's bash script

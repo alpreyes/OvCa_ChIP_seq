@@ -23,4 +23,41 @@ library(rtracklayer)
 library(optparse)
 library(pheatmap)
 
+moc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/MOC/allpeaks.anno.tsv")
+moc_k27ac_hg19 <- moc_k27ac_hg19[,-7]
+
 ```
+
+make consensus set
+```{r}
+
+consensus_moc_k27ac_hg19 <- moc_k27ac_hg19[which(rowSums(moc_k27ac_hg19[,4:6]) >= 1.5),]
+
+gr_consensus_moc_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_moc_k27ac_hg19, keep.extra.columns = FALSE)
+
+gr_consensus_moc_k27ac_hg19
+gr_consensus_moc_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_moc_k27ac_hg19, ignore.strand = FALSE)
+gr_consensus_moc_k27ac_hg19 ### *** consensus peaks appear to be less abundant bc of merge step ***
+
+```
+
+make unique sets
+```{r}
+
+union_unique_moc_k27ac_hg19 <- moc_k27ac_hg19[which(rowSums(moc_k27ac_hg19[,4:6]) < 1.5), ]
+colnames(union_unique_moc_k27ac_hg19)
+
+gtfr_unique_moc_k27ac_hg19 <- filter(union_unique_moc_k27ac_hg19, A03_GTFR230 == 1)
+efo_unique_moc_k27ac_hg19  <- filter(union_unique_moc_k27ac_hg19, A04_EFO27_H3K27Ac_hg37 == 1)
+mcas_unique_moc_k27ac_hg19 <- filter(union_unique_moc_k27ac_hg19, A05_MCAS ==1)
+
+gr_gtfr_unique_moc_k27ac_hg19 <- makeGRangesFromDataFrame(gtfr_unique_moc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_efo_unique_moc_k27ac_hg19  <- makeGRangesFromDataFrame(efo_unique_moc_k27ac_hg19,  keep.extra.columns = FALSE)
+gr_mcas_unique_moc_k27ac_hg19 <- makeGRangesFromDataFrame(mcas_unique_moc_k27ac_hg19, keep.extra.columns = FALSE)
+
+```
+
+
+
+
+
