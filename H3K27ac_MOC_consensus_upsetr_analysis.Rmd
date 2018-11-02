@@ -57,7 +57,79 @@ gr_mcas_unique_moc_k27ac_hg19 <- makeGRangesFromDataFrame(mcas_unique_moc_k27ac_
 
 ```
 
+write peak subsets to files
+```{r}
 
+write.table(as.data.frame(gr_consensus_moc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/MOC/consensus_moc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(gr_gtfr_unique_moc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/MOC/unique_gtfr_moc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(gr_efo_unique_moc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/MOC/unique_efo_moc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(gr_mcas_unique_moc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/MOC/unique_mcas_moc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+```
+
+do (simon's newest method for) upsetr analysis (can run this part by itself independent of other chunks)
+```{r}
+
+moc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/MOC/allpeaks.anno.tsv")
+moc_k27ac_hg19 <- moc_k27ac_hg19[,-7]
+
+x <- moc_k27ac_hg19 ###change this obj name to whatever file being analyzed
+View(x)
+
+y <- x; y[, c(4:ncol(x))] <- x[, c(4:ncol(x))] > 0.5
+View(y)
+
+y <- GRanges(seqnames = y$chr,
+             ranges = IRanges(start = y$start, end = y$end - 1),
+             data = y[, 4:ncol(y)])
+y
+
+yr <- GenomicRanges::reduce(y, with.revmap = TRUE)
+
+sample_overlap <- t(bind_cols(lapply(
+  relist(mcols(y)[unlist(yr$revmap),], yr$revmap),
+  function(x) {
+    tibble::as_tibble(colSums(as.matrix(x)) >= 1) ### set threshold of overlap (percentage) here.....why is this mat bigger than x???...how to interp this chunk
+  })))
+
+mcols(yr) <- sample_overlap
+colnames(sample_overlap) <- gsub("data.", "", colnames(mcols(y)))
+yr$sample_count <- rowSums(as.matrix(mcols(yr)))
+
+# file_ranges <- yr
+# save(file_ranges, sample_overlap, file = paste0(opt$out, "_rdata.rda"))
+# 
+# pdf(paste0(opt$out, "_upset.pdf")) ### not yet working
+
+upset(as.data.frame(sample_overlap + 0), ### simon's method
+      order.by = "freq",
+      text.scale = c(2, 2, 2, 1.5, 2.25, 2.25),
+      point.size = 5) ### use this method bc of reduce step (ie bedtools merge) --> doesn't double count peaks, instead uses our defn of inclusive boundaries
+
+```
 
 
 

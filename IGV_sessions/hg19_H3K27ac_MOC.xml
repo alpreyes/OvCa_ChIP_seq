@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Session genome="hg38" hasGeneTrack="true" hasSequenceTrack="true" locus="chr7:158220193-158538184" path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_MOC.xml" version="8">
+    <Resources>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/unique_mcas_moc_k27ac_hg19.bed"/>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/consensus_moc_k27ac_hg19.bed"/>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_biofeature_beds/MOC/holding/A03_GTFR230.bed"/>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/unique_efo_moc_k27ac_hg19.bed"/>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/unique_gtfr_moc_k27ac_hg19.bed"/>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_biofeature_beds/MOC/holding/A04_EFO27_H3K27Ac_hg37.bed"/>
+        <Resource path="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_biofeature_beds/MOC/holding/A05_MCAS.bed"/>
+    </Resources>
+    <Panel height="626" name="DataPanel" width="1654">
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="51,0,204" colorScale="ContinuousColorScale;0.0;81.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/consensus_moc_k27ac_hg19.bed" name="consensus_moc_k27ac_hg19.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="81.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="0,0,178" colorScale="ContinuousColorScale;0.0;46.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_biofeature_beds/MOC/holding/A03_GTFR230.bed" name="A03_GTFR230.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="46.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="204,0,102" colorScale="ContinuousColorScale;0.0;472.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_biofeature_beds/MOC/holding/A04_EFO27_H3K27Ac_hg37.bed" name="A04_EFO27_H3K27Ac_hg37.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="472.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="51,153,0" colorScale="ContinuousColorScale;0.0;85.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/hg19_H3K27ac_biofeature_beds/MOC/holding/A05_MCAS.bed" name="A05_MCAS.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="85.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="153,255,255" colorScale="ContinuousColorScale;0.0;5.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/unique_gtfr_moc_k27ac_hg19.bed" name="unique_gtfr_moc_k27ac_hg19.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="5.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="255,153,153" colorScale="ContinuousColorScale;0.0;373.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/unique_efo_moc_k27ac_hg19.bed" name="unique_efo_moc_k27ac_hg19.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="373.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="153,255,153" colorScale="ContinuousColorScale;0.0;38.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="/Users/reyesa1/Desktop/OvCa_ChIP_seq/peak_subsets/hg19_H3K27ac/MOC/unique_mcas_moc_k27ac_hg19.bed" name="unique_mcas_moc_k27ac_hg19.bed" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="38.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+    </Panel>
+    <Panel height="88" name="FeaturePanel" width="1654">
+        <Track altColor="0,0,178" autoScale="false" color="0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" id="Reference sequence" name="Reference sequence" sortable="false" visible="true"/>
+        <Track altColor="0,0,178" autoScale="false" clazz="org.broad.igv.track.FeatureTrack" color="0,0,178" colorScale="ContinuousColorScale;0.0;402.0;255,255,255;0,0,178" displayMode="COLLAPSED" featureVisibilityWindow="-1" fontSize="10" height="35" id="hg38_genes" name="Gene" renderer="BASIC_FEATURE" sortable="false" visible="true" windowFunction="count">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="402.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+    </Panel>
+    <PanelLayout dividerFractions="0.871012482662968"/>
+    <HiddenAttributes>
+        <Attribute name="DATA FILE"/>
+        <Attribute name="DATA TYPE"/>
+        <Attribute name="NAME"/>
+    </HiddenAttributes>
+</Session>
