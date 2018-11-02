@@ -44,7 +44,7 @@ gr_consensus_moc_k27ac_hg19 ### *** consensus peaks appear to be less abundant b
 make unique sets
 ```{r}
 
-union_unique_moc_k27ac_hg19 <- moc_k27ac_hg19[which(rowSums(moc_k27ac_hg19[,4:6]) < 1.5), ]
+union_unique_moc_k27ac_hg19 <- moc_k27ac_hg19[which(rowSums(moc_k27ac_hg19[,4:6]) < 1.5),]
 colnames(union_unique_moc_k27ac_hg19)
 
 gtfr_unique_moc_k27ac_hg19 <- filter(union_unique_moc_k27ac_hg19, A03_GTFR230 == 1)

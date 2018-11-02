@@ -23,4 +23,114 @@ library(rtracklayer)
 library(optparse)
 library(pheatmap) 
 
+ccoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/CCOC/allpeaks.anno.tsv")
+ccoc_k27ac_hg19 <- ccoc_k27ac_hg19[,-7]
+
 ```
+
+make consensus set
+```{r}
+
+consensus_ccoc_k27ac_hg19 <- ccoc_k27ac_hg19[which(rowSums(ccoc_k27ac_hg19[,4:6]) >= 1.5),]
+
+gr_consensus_ccoc_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_ccoc_k27ac_hg19, keep.extra.columns = FALSE)
+
+gr_consensus_ccoc_k27ac_hg19
+gr_consensus_ccoc_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_ccoc_k27ac_hg19, ignore.strand = FALSE)
+gr_consensus_ccoc_k27ac_hg19 ### NOTE: merge step with consensus set deflates number of common peaks (good for interp upsetr plot)
+
+```
+
+make unique sets
+```{r}
+
+union_unique_ccoc_k27ac_hg19 <- ccoc_k27ac_hg19[which(rowSums(ccoc_k27ac_hg19[,4:6]) < 1.5),]
+colnames(union_unique_ccoc_k27ac_hg19)
+
+unique_jhoc_ccoc_k27ac_hg19 <- filter(union_unique_ccoc_k27ac_hg19, D01_JHOC == 1)
+unique_es2_ccoc_k27ac_hg19  <- filter(union_unique_ccoc_k27ac_hg19, D02_ES2_H3K27Ac_hg37 == 1)
+unique_rmg_ccoc_k27ac_hg19  <- filter(union_unique_ccoc_k27ac_hg19, D03_RMG_H3K27Ac_hg37 == 1)
+
+gr_unique_jhoc_ccoc_k27ac_hg19 <- makeGRangesFromDataFrame(unique_jhoc_ccoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_unique_es2_ccoc_k27ac_hg19  <- makeGRangesFromDataFrame(unique_es2_ccoc_k27ac_hg19, keep.extra.columns = FALSE)
+gr_unique_rmg_ccoc_k27ac_hg19  <- makeGRangesFromDataFrame(unique_rmg_ccoc_k27ac_hg19, keep.extra.columns = FALSE)
+
+```
+
+write peak subsets to files
+```{r}
+
+write.table(as.data.frame(gr_consensus_ccoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/CCOC/consensus_ccoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(gr_unique_jhoc_ccoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/CCOC/unique_jhoc_ccoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(gr_unique_es2_ccoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/CCOC/gr_unique_es2_ccoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(gr_unique_rmg_ccoc_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/CCOC/unique_rmg_ccoc_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+```
+
+do (simon's newest method for) upsetr analysis (can run this part by itself independent of other chunks)
+```{r}
+
+ccoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/CCOC/allpeaks.anno.tsv")
+ccoc_k27ac_hg19 <- ccoc_k27ac_hg19[,-7]
+
+x <- ccoc_k27ac_hg19 ###change this obj name to whatever file being analyzed
+View(x)
+
+y <- x; y[, c(4:ncol(x))] <- x[, c(4:ncol(x))] > 0.5
+View(y)
+
+y <- GRanges(seqnames = y$chr,
+             ranges = IRanges(start = y$start, end = y$end - 1),
+             data = y[, 4:ncol(y)])
+y
+
+yr <- GenomicRanges::reduce(y, with.revmap = TRUE)
+
+sample_overlap <- t(bind_cols(lapply(
+  relist(mcols(y)[unlist(yr$revmap),], yr$revmap),
+  function(x) {
+    tibble::as_tibble(colSums(as.matrix(x)) >= 1) ### set threshold of overlap (percentage) here.....why is this mat bigger than x???...how to interp this chunk
+  })))
+
+mcols(yr) <- sample_overlap
+colnames(sample_overlap) <- gsub("data.", "", colnames(mcols(y)))
+yr$sample_count <- rowSums(as.matrix(mcols(yr)))
+
+# file_ranges <- yr
+# save(file_ranges, sample_overlap, file = paste0(opt$out, "_rdata.rda"))
+# 
+# pdf(paste0(opt$out, "_upset.pdf")) ### not yet working
+
+upset(as.data.frame(sample_overlap + 0), ### simon's method
+      order.by = "freq",
+      text.scale = c(2, 2, 2, 1.5, 2.25, 2.25),
+      point.size = 5) ### use this method bc of reduce step (ie bedtools merge) --> doesn't double count peaks, instead uses our defn of inclusive boundaries
+
+
+```
+
+
+
