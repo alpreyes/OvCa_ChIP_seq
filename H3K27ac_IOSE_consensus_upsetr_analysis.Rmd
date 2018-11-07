@@ -1,0 +1,55 @@
+---
+title: "H3K27ac_IOSE_consensus_upsetr_analysis"
+author: "Alberto Luiz Pascasio Reyes"
+date: "11/2/2018"
+output: html_document
+---
+
+load libraries and input files
+```{r}
+
+library(GenomicRanges)
+library(GenomicFeatures)
+library(HelloRanges)
+library(IRanges)
+library(S4Vectors)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(UpSetR)
+library(rtracklayer)
+library(optparse)
+library(pheatmap) 
+
+iose_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/IOSE/allpeaks.anno.tsv")
+iose_k27ac_hg19 <- iose_k27ac_hg19[,-6]
+
+```
+
+make consensus set
+```{r}
+
+consensus_iose_k27ac_hg19 <- iose_k27ac_hg19[which(rowSums(iose_k27ac_hg19[,4:5]) >= 1.5),]
+
+gr_consensus_iose_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_iose_k27ac_hg19, keep.extra.columns = FALSE)
+
+gr_consensus_iose_k27ac_hg19
+gr_consensus_iose_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_iose_k27ac_hg19, ignore.strand = FALSE) ### this "undercounts" # of shared peaks
+gr_consensus_iose_k27ac_hg19
+
+```
+
+make unique sets
+```{r}
+
+union_unique_iose_k27ac_hg19 <- iose_k27ac_hg19[which(rowSums(iose_k27ac_hg19[,4:5]) < 1.5),]
+colnames(union_unique_iose_k27ac_hg19)
+
+unique_iose4_iose_k27ac_hg19  <- filter(union_unique_iose_k27ac_hg19, B02_iOSE4 == 1)
+unique_iose11_iose_k27ac_hg19 <- filter(union_unique_iose_k27ac_hg19, B03_iOSE11 == 1)
+
+
+
+```
