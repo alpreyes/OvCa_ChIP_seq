@@ -1,0 +1,128 @@
+---
+title: "H3K27ac_FTSEC_consensus_upsetr_analysis"
+author: "Alberto Luiz Pascasio Reyes"
+date: "11/19/2018"
+output: html_document
+---
+
+load libraries and input files
+```{r}
+
+library(GenomicRanges)
+library(GenomicFeatures)
+library(HelloRanges)
+library(IRanges)
+library(S4Vectors)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(UpSetR)
+library(rtracklayer)
+library(optparse)
+library(pheatmap) 
+
+ftsec_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/FTSEC/allpeaks.anno.tsv")
+ftsec_k27ac_hg19 <- ftsec_k27ac_hg19[,-6]
+
+```
+
+make consensus set
+```{r}
+
+consensus_ftsec_k27ac_hg19 <- ftsec_k27ac_hg19[which(rowSums(ftsec_k27ac_hg19[,4:5]) >= 1.5),]
+
+gr_consensus_ftsec_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_ftsec_k27ac_hg19, keep.extra.columns = FALSE)
+
+gr_consensus_ftsec_k27ac_hg19
+gr_consensus_ftsec_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_ftsec_k27ac_hg19, ignore.strand = FALSE)
+gr_consensus_ftsec_k27ac_hg19
+
+```
+
+make unique sets
+```{r}
+
+union_unique_ftsec_k27ac_hg19 <- ftsec_k27ac_hg19[which(rowSums(ftsec_k27ac_hg19[,4:5]) < 1.5),]
+colnames(union_unique_ftsec_k27ac_hg19)
+
+unique_ftsec33_ftsec_k27ac_hg19 <- filter(union_unique_ftsec_k27ac_hg19, B04_iFTSEC33 == 1)
+unique_ftsec246_ftsec_k27ac_hg19 <- filter(union_unique_ftsec_k27ac_hg19, B05_iFTSEC246 ==1)
+
+gr_unique_ftsec33_ftsec_k27ac_hg19 <- makeGRangesFromDataFrame(unique_ftsec33_ftsec_k27ac_hg19, keep.extra.columns = FALSE)
+gr_unique_ftsec246_ftsec_k27ac_hg19 <- makeGRangesFromDataFrame(unique_ftsec246_ftsec_k27ac_hg19, keep.extra.columns = FALSE)
+
+```
+
+write peak subsets to files
+```{r}
+
+write.table(as.data.frame(gr_consensus_ftsec_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/FTSEC/consensus_ftsec_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(unique_ftsec33_ftsec_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/FTSEC/unique_ftsec33_ftsec_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+write.table(as.data.frame(unique_ftsec246_ftsec_k27ac_hg19),
+            file = "./peak_subsets/hg19_H3K27ac/FTSEC/unique_ftsec246_ftsec_k27ac_hg19.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+```
+
+do (simon's newest method for) upsetr analysis (can run this part by itself independent of other chunks)
+```{r}
+
+ftsec_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/FTSEC/allpeaks.anno.tsv")
+ftsec_k27ac_hg19 <- ftsec_k27ac_hg19[,-6]
+
+x <- ftsec_k27ac_hg19 ###change this obj name to whatever file being analyzed
+View(x)
+
+y <- x; y[, c(4:ncol(x))] <- x[, c(4:ncol(x))] > 0.5
+View(y)
+
+y <- GRanges(seqnames = y$chr,
+             ranges = IRanges(start = y$start, end = y$end - 1),
+             data = y[, 4:ncol(y)])
+y
+
+yr <- GenomicRanges::reduce(y, with.revmap = TRUE)
+
+sample_overlap <- t(bind_cols(lapply(
+  relist(mcols(y)[unlist(yr$revmap),], yr$revmap),
+  function(x) {
+    tibble::as_tibble(colSums(as.matrix(x)) >= 1) ### set threshold of overlap (percentage) here.....why is this mat bigger than x???...how to interp this chunk
+  })))
+
+mcols(yr) <- sample_overlap
+colnames(sample_overlap) <- gsub("data.", "", colnames(mcols(y)))
+yr$sample_count <- rowSums(as.matrix(mcols(yr)))
+
+# file_ranges <- yr
+# save(file_ranges, sample_overlap, file = paste0(opt$out, "_rdata.rda"))
+# 
+# pdf(paste0(opt$out, "_upset.pdf")) ### not yet working
+
+upset(as.data.frame(sample_overlap + 0), ### simon's method
+      order.by = "freq",
+      text.scale = c(2, 2, 2, 1.5, 2.25, 2.25),
+      point.size = 5) ### use this method bc of reduce step (ie bedtools merge) --> doesn't double count peaks, instead uses our defn of inclusive boundaries
+
+
+```
+
+
+
+
