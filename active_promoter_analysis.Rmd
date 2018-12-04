@@ -1,0 +1,26 @@
+---
+title: "active_promoter_analysis"
+author: "Alberto Luiz Pascasio Reyes"
+date: "12/4/2018"
+output: html_document
+---
+
+```{r}
+
+library(GenomicRanges)
+library(GenomicFeatures)
+library(HelloRanges)
+library(IRanges)
+library(S4Vectors)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(UpSetR)
+library(rtracklayer)
+library(optparse)
+library(pheatmap) 
+
+
+```
