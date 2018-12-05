@@ -5,6 +5,7 @@ date: "12/4/2018"
 output: html_document
 ---
 
+load libraries and input files
 ```{r}
 
 library(GenomicRanges)
@@ -20,7 +21,46 @@ library(ggplot2)
 library(UpSetR)
 library(rtracklayer)
 library(optparse)
-library(pheatmap) 
+library(pheatmap)
+library(S4Vectors)
+
+### load hg 19 tss file
+hg19_TSS <- read_table2("hg19_TSS.bed", col_names = FALSE)
+colnames(hg19_TSS) <- c("chr", "start", "end")
+
+### load hgsoc h3k27ac hg19 consensus
+hgsoc_k27ac_hg19_con <- read_table2("peak_subsets/hg19_H3K27ac/HGSOC/hgsoc_k27ac_hg19_consensus.bed", col_names = FALSE)
+colnames(hgsoc_k27ac_hg19_con) <- c("chr", "start", "end", "width", "strand")
+
+```
+
+intersect hgsoc k27ac con w/ tss
+```{r}
+
+bedtools_intersect("-a hgsoc_k27ac_hg19_consensus.bed -b hg19_TSS.bed -wa -g hg19")
+
+hgsoc_k27ac_hg19_con <- makeGRangesFromDataFrame(hgsoc_k27ac_hg19_con, keep.extra.columns = FALSE)
+
+hg19_TSS <- makeGRangesFromDataFrame(hg19_TSS)
+
+proms_tmp <- findOverlapPairs(hgsoc_k27ac_hg19_con, hg19_TSS, ignore.strand = TRUE)
+
+proms <- S4Vectors::first(proms_tmp)
+
+proms
+
+### write "promoters" obj to bed file
+write.table(as.data.frame(proms),
+            file = "./peak_subsets/hg19_H3K27ac/HGSOC/intersect_w_TSS/hgsoc_k27ac_hg19_con_proms.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+
+
+
+
 
 
 ```
