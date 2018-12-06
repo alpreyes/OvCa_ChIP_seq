@@ -37,6 +37,9 @@ hgsoc_k4me3_hg19_un <- read_table2("hg19_H3K4me3_biofeature_beds/HGSOC/union_pea
                                    col_names = FALSE) ##un for union
 colnames(hgsoc_k4me3_hg19_un) <- c("chr", "start", "end")
 
+### read in cell-line counts matrix (will use for finding genes near found act proms --> cluster analysis based on expression)
+ovca_cl_fc <- read_csv("Cell_Line_RNA_seq_2017_and_2018_FAIL_SAMPLES_REMOVED_metadata.csv", col_names = TRUE)
+
 ```
 
 intersect hgsoc k27ac con w/ tss
@@ -82,6 +85,7 @@ write.table(as.data.frame(act_proms),
             sep = "\t")
 
 ```
+
 
 
 
