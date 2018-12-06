@@ -38,7 +38,7 @@ hgsoc_k4me3_hg19_un <- read_table2("hg19_H3K4me3_biofeature_beds/HGSOC/union_pea
 colnames(hgsoc_k4me3_hg19_un) <- c("chr", "start", "end")
 
 ### read in cell-line counts matrix (will use for finding genes near found act proms --> cluster analysis based on expression)
-ovca_cl_fc <- read_csv("Cell_Line_RNA_seq_2017_and_2018_FAIL_SAMPLES_REMOVED_metadata.csv", col_names = TRUE)
+ovca_cl_fc <- read_csv("Cell_Line_RNA_seq_2017_and_2018_FAIL_SAMPLES_REMOVED_featurecounts_matrix.csv", col_names = TRUE)
 
 ```
 
@@ -73,7 +73,13 @@ hgsoc_k4me3_hg19_un <- makeGRangesFromDataFrame(hgsoc_k4me3_hg19_un, keep.extra.
 
 act_proms_tmp <- findOverlapPairs(proms, hgsoc_k4me3_hg19_un, 
                                   ignore.strand = TRUE) ## intersect w/ union (all) hel4me3 hgsoc peaks (will try other subsets later)
-act_proms <- act_proms_tmp
+act_proms <- c(S4Vectors::first(act_proms_tmp), S4Vectors::second(act_proms_tmp))
+act_proms <- sortSeqlevels(act_proms)
+act_proms
+
+bedtools_merge("-i act_proms.bed")
+
+act_proms <- GenomicRanges::reduce(act_proms, ignore.strand = TRUE)
 act_proms
 
 ### write "active promoters" obj to bed file
@@ -85,6 +91,122 @@ write.table(as.data.frame(act_proms),
             sep = "\t")
 
 ```
+
+process rna-seq feature counts matrix for intersecting w. act proms
+```{r}
+
+ovca_cl_fc_GR <- makeGRangesFromDataFrame(ovca_cl_fc[,c(3:6,1:2,7:29)], 
+                                          keep.extra.columns = TRUE,
+                                          ignore.strand = FALSE)
+ovca_cl_fc_GR
+mcols(ovca_cl_fc_GR) ### note cl table has 25 md columns --> use these dimensions to add to act_proms obj
+colnames(mcols(ovca_cl_fc_GR))
+
+```
+
+prep act_proms gr object to do "10 genes up and downstream" analysis
+```{r}
+
+md_cols <- data.frame(matrix(nrow = 8071, ncol = dim(mcols(ovca_cl_fc_GR))[2]))
+colnames(md_cols)
+colnames(md_cols) <- colnames(mcols(ovca_cl_fc_GR))
+colnames(md_cols)
+
+md_cols$Genename <- "act_prom"
+
+mcols(act_proms)
+mcols(act_proms) <- md_cols
+mcols(act_proms)
+
+```
+
+start 10 genes up and downstream analysis
+```{r}
+
+### combine ("rbind/append") counts matrix GR w/ act_proms GR now that they have matching md cols
+ovca_cl_fc_GR_w_ap <- c(ovca_cl_fc_GR, act_proms) # ap = active promoters, *** NOTE warning message about non-matching levels ***
+
+### sort new gr obj by coordinate
+ovca_cl_fc_GR_w_ap
+ovca_cl_fc_GR_w_ap <- sortSeqlevels(ovca_cl_fc_GR_w_ap)
+ovca_cl_fc_GR_w_ap <- sort(ovca_cl_fc_GR_w_ap)
+
+### get indicdes of all act proms (assuming index directly relates to genomic position)
+ap_index <- grep("act_prom", ovca_cl_fc_GR_w_ap$Genename)
+
+### make vector of indices of 10 deares genes up and down stream from each ap *** NOTE: doesnt yet consifer overlapping genes or dif chr's ***
+nearest_genes <- c()
+for(i in 1:length(ap_index))
+{
+  for(j in 1:10)
+  {
+    nearest_genes <- c(nearest_genes, ap_index[i]-j)
+  }
+}
+nearest_genes <- unique(sort(nearest_genes))
+nearest_genes
+
+### use ^^^ indices to subset ovca_cl_fc_GR_w_ap
+hgsoc_con_genes_near_ap <- ovca_cl_fc_GR_w_ap[nearest_genes,]
+hgsoc_con_genes_near_ap
+
+### eye ball results
+hgsoc_con_genes_near_ap_df <- as.data.frame(hgsoc_con_genes_near_ap)
+hgsoc_con_genes_near_ap_df <- hgsoc_con_genes_near_ap_df[-grep("act_prom", hgsoc_con_genes_near_ap_df$Genename),] ### rm act_prom rows, ONLY RUN ONCE!!!!!!!
+range(hgsoc_con_genes_near_ap_df$CaOV3, na.rm = TRUE)
+range(hgsoc_con_genes_near_ap_df$HEY, na.rm = TRUE)
+range(hgsoc_con_genes_near_ap_df$Kuramochi, na.rm = TRUE)
+range(hgsoc_con_genes_near_ap_df$UWB1_289, na.rm = TRUE)
+
+### write ^^^ df to txt file to input into GENAVi
+write.table(hgsoc_con_genes_near_ap_df$Genename,
+            file = "hgsoc_con_genes_near_ap_df.txt",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
+
+
+
+```
+
+cluster analysis w/ deseq2 fcts
+```{r}
+
+### filter out all-zero rows
+nrow(hgsoc_con_genes_near_ap_df)
+hgsoc_con_genes_near_ap_df_filt <- hgsoc_con_genes_near_ap_df[rowSums(hgsoc_con_genes_near_ap_df[,9:30]) > 1,]
+nrow(hgsoc_con_genes_near_ap_df_filt)
+
+library(DESeq2)
+
+### normalize --> can't do these steps AFTER gene selection? bc need full library depth (ie: col sums) to normalize
+hgsoc_con_genes_near_ap_df_filt_vst <- varianceStabilizingTransformation(as.matrix(hgsoc_con_genes_near_ap_df_filt[,9:30]), blind = FALSE)
+hgsoc_con_genes_near_ap_df_filt_rlog<- rlog(as.matrix(hgsoc_con_genes_near_ap_df_filt[,9:30]), blind = FALSE)
+
+### calc dist mats
+hgsoc_con_genes_near_ap_df_filt_vst_dist <- dist(t(hgsoc_con_genes_near_ap_df_filt_vst))
+hgsoc_con_genes_near_ap_df_filt_rlog_dist<- dist(t(hgsoc_con_genes_near_ap_df_filt_rlog))
+
+hcgnapdffvd_mat <- as.matrix(hgsoc_con_genes_near_ap_df_filt_vst_dist)
+hcgnapdffrd_mat <- as.matrix(hgsoc_con_genes_near_ap_df_filt_rlog_dist)
+
+### make heatmaps *** ALSO TRY INPUTTING GENE LIST INTO GENAVi ***
+library(RColorBrewer)
+library(pheatmap)
+
+colors <- colorRampPalette(rev(brewer.pal(9,"Blues")))(255)
+
+pheatmap(hcgnapdffvd_mat,
+         clustering_distance_rows = hgsoc_con_genes_near_ap_df_filt_vst_dist,
+         clustering_distance_cols = hgsoc_con_genes_near_ap_df_filt_vst_dist,
+         col = colors) ##### not informative/expected
+
+
+
+```
+
+
 
 
 
