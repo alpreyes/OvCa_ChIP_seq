@@ -32,6 +32,11 @@ colnames(hg19_TSS) <- c("chr", "start", "end")
 hgsoc_k27ac_hg19_con <- read_table2("peak_subsets/hg19_H3K27ac/HGSOC/hgsoc_k27ac_hg19_consensus.bed", col_names = FALSE)
 colnames(hgsoc_k27ac_hg19_con) <- c("chr", "start", "end", "width", "strand")
 
+### load hgsoc h3k4me3 hg19 union (NOT consensus)
+hgsoc_k4me3_hg19_un <- read_table2("hg19_H3K4me3_biofeature_beds/HGSOC/union_peak_set/HGSOC_H3K4me3_lift_to_hg19_union_peaks.bed",
+                                   col_names = FALSE) ##un for union
+colnames(hgsoc_k4me3_hg19_un) <- c("chr", "start", "end")
+
 ```
 
 intersect hgsoc k27ac con w/ tss
@@ -40,13 +45,10 @@ intersect hgsoc k27ac con w/ tss
 bedtools_intersect("-a hgsoc_k27ac_hg19_consensus.bed -b hg19_TSS.bed -wa -g hg19")
 
 hgsoc_k27ac_hg19_con <- makeGRangesFromDataFrame(hgsoc_k27ac_hg19_con, keep.extra.columns = FALSE)
-
 hg19_TSS <- makeGRangesFromDataFrame(hg19_TSS)
 
-proms_tmp <- findOverlapPairs(hgsoc_k27ac_hg19_con, hg19_TSS, ignore.strand = TRUE)
-
+proms_tmp <- findOverlapPairs(hgsoc_k27ac_hg19_con, hg19_TSS, ignore.strand = TRUE) ### notw this is hgsoc_consensus promoters
 proms <- S4Vectors::first(proms_tmp)
-
 proms
 
 ### write "promoters" obj to bed file
@@ -57,10 +59,30 @@ write.table(as.data.frame(proms),
             quote = FALSE,
             sep = "\t")
 
+```
 
+intersect "proms" w/ h3k4me3 UNION to get all active promoters
+```{r}
 
+bedtools_intersect("-a proms.bed -b hgsoc_k4me3_hg19_un.bed -wa -wb")
 
+hgsoc_k4me3_hg19_un <- makeGRangesFromDataFrame(hgsoc_k4me3_hg19_un, keep.extra.columns = FALSE)
 
+act_proms_tmp <- findOverlapPairs(proms, hgsoc_k4me3_hg19_un, 
+                                  ignore.strand = TRUE) ## intersect w/ union (all) hel4me3 hgsoc peaks (will try other subsets later)
+act_proms <- act_proms_tmp
+act_proms
 
+### write "active promoters" obj to bed file
+write.table(as.data.frame(act_proms),
+            file = "./peak_subsets/hg19_H3K4me3/HGSOC/hgsoc_k27ac_con_w_tss_w_k4me3_un_hg19_act_proms.bed",
+            row.names = FALSE,
+            col.names = FALSE,
+            quote = FALSE,
+            sep = "\t")
 
 ```
+
+
+
+
