@@ -191,7 +191,7 @@ hgsoc_con_genes_near_ap_df_filt_rlog_dist<- dist(t(hgsoc_con_genes_near_ap_df_fi
 hcgnapdffvd_mat <- as.matrix(hgsoc_con_genes_near_ap_df_filt_vst_dist)
 hcgnapdffrd_mat <- as.matrix(hgsoc_con_genes_near_ap_df_filt_rlog_dist)
 
-### make heatmaps *** ALSO TRY INPUTTING GENE LIST INTO GENAVi ***
+### make heatmaps *** ALSO TRY INPUTTING GENE LIST INTO GENAVi *** --> tried and clusters were still not informative/expected
 library(RColorBrewer)
 library(pheatmap)
 
