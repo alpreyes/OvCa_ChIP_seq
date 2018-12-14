@@ -63,6 +63,7 @@ gr_kur_unique_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(kur_unique_hgsoc_k27a
 
 ### make consensus peak set df
 consensus_hgsoc_k27ac_hg19 <- hgsoc_k27ac_hg19[which(rowSums(hgsoc_k27ac_hg19[,4:7]) >= 1.5), -8] ##### NOT merged
+### ********* THIS IS WRONG BC CAN BE 1 + 0.3 _ 0.2 + 0 *********
 
 ### convert into granges and ignore metadata cols
 gr_consensus_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_hgsoc_k27ac_hg19, keep.extra.columns = FALSE)
@@ -206,29 +207,46 @@ upset(as.data.frame(sample_overlap + 0), ### simon's method
 #                           paste0(opt$out, "_", peak_count, "_samples.bed"))
 # } ### not working yet
 
-z <- hgsoc_k27ac_hg19[,4:7] >= 0.5
-z <- z + 0
+rm(z)
+z <- (hgsoc_k27ac_hg19[,4:7] >= 0.5) + 0
+View(z)
 upset(as.data.frame(z), order.by = "freq")
 
 ```
 
 
 
+above method for calling consensus peaks (rowSums >= 1.5) OVERCOUNTS bc possible 1 + 0.3 + 0.2 which should NOT be called consensus
+```{r}
 
+### write fct to check that AT LEAST ONE other col is >=0.5
+### input "consensus" matrix
+### check each col for 1, once found then note TRUE (should be true for all rows)
+### check each col for 0.5, once found then note TRUE (if true then consensus if NOT then exclude)
 
+check_consensus <- function(filtmat, minov) ### filt mat: filtered matrix (filter by row Sum) 
+{
+  # for(i in 1:dim(filtmat)[1])
+  # {
+  #   for(j in 4:dim(filtmat)[2])
+  #   {
+  #     
+  #   }
+  # }
+  
+  filtmatbin <- cbind(filtmat[,1:3], (filtmat[,4:7] >= minov) + 0) ### filter matrix binary
+  
+  conmat <- filtmatbin[which(rowSums(filtmatbin[,4:7]) >= 2),]
+  
+  conmat
+  
+}
 
+zz <- check_consensus(consensus_hgsoc_k27ac_hg19, 0.5) ### this now matches row number of NON-MERGED input upsetr plot
 
+nrow(zz[which(rowSums(zz[,4:7]) ==4),])
 
-
-
-
-
-
-
-
-
-
-
+```
 
 
 try cluster analysis
