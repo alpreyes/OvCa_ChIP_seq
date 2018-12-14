@@ -27,7 +27,7 @@ hgsoc_k27ac_hg19 <- read_table2("hg19_H3K27ac_biofeature_beds/HGSOC/allpeaks.ann
 
 ```
 
-form peak subsets (unique and consensus)
+form peak subsets: unique, consensus, strict
 ```{r}
 
 ### make union of all unique peaks
@@ -71,6 +71,24 @@ gr_consensus_hgsoc_k27ac_hg19 <- makeGRangesFromDataFrame(consensus_hgsoc_k27ac_
 gr_consensus_hgsoc_k27ac_hg19 ### 136361 peaks
 gr_consensus_hgsoc_k27ac_hg19 <- GenomicRanges::reduce(gr_consensus_hgsoc_k27ac_hg19, ignore.strand = FALSE)
 gr_consensus_hgsoc_k27ac_hg19 ### 39014 peaks --> douesn't double count overlapping regions
+
+
+
+### make strict subset of peaks (peaks that ONLY APPEAR IN ALL SAMPLES) df
+# strict_hgsoc_k27ac_hg19 <- hgsoc_k27ac_hg19[which(rowSums(hgsoc_k27ac_hg19[4:7]) > 3), -8]
+
+
+
+hgsoc_k27ac_hg19 %>% select(B08_Hey_H3K27Ac_hg37, B09_UWB1.289, B10_CaOV3, B11_Kuramochi_H3K27Ac_hg37) %>% 
+  filter(B08_Hey_H3K27Ac_hg37 >= 0.5 & B09_UWB1.289 >= 0.5 & B10_CaOV3 >= 0.5 & B11_Kuramochi_H3K27Ac_hg37 >= 0.5)
+
+strict_hgsoc_k27ac_hg19 <- hgsoc_k27ac_hg19 %>% select(chr, start, end, B08_Hey_H3K27Ac_hg37, B09_UWB1.289, B10_CaOV3, B11_Kuramochi_H3K27Ac_hg37) %>% 
+                              filter(B08_Hey_H3K27Ac_hg37 >= 0.5 & B09_UWB1.289 >= 0.5 & B10_CaOV3 >= 0.5 & B11_Kuramochi_H3K27Ac_hg37 >= 0.5)
+
+strict_hgsoc_k27ac_hg19_gr <- makeGRangesFromDataFrame(strict_hgsoc_k27ac_hg19, keep.extra.columns = TRUE)
+
+strict_gr_r <- GenomicRanges::reduce(strict_hgsoc_k27ac_hg19_gr, with.revmap = TRUE)
+
 
 ```
 
@@ -123,6 +141,7 @@ write.table(as.data.frame(gr_kur_unique_hgsoc_k27ac_hg19),
 ```
 
 do consensus/intersection/upsetr analysis
+NOTE: consider how to NOT do bedtools merge step to NOT deflate # of shared peaks
 ```{r}
 
 # option_list <- list(
@@ -157,7 +176,7 @@ y <- GRanges(seqnames = y$chr,
              data = y[, 4:ncol(y)])
 y
 
-yr <- GenomicRanges::reduce(y, with.revmap = TRUE)
+yr <- GenomicRanges::reduce(y, with.revmap = TRUE) ### try excluding this step to NOT merge and undercount shared peaks
 
 sample_overlap <- t(bind_cols(lapply(
   relist(mcols(y)[unlist(yr$revmap),], yr$revmap),
@@ -186,6 +205,10 @@ upset(as.data.frame(sample_overlap + 0), ### simon's method
 #   rtracklayer::export.bed(yr[yr$sample_count == peak_count, ],
 #                           paste0(opt$out, "_", peak_count, "_samples.bed"))
 # } ### not working yet
+
+z <- hgsoc_k27ac_hg19[,4:7] >= 0.5
+z <- z + 0
+upset(as.data.frame(z), order.by = "freq")
 
 ```
 
